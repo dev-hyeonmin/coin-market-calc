@@ -7,6 +7,7 @@ export default defineConfig(({ command, mode }) => {
   
   return {
     server: {
+      host: true,
       proxy: {
         '/api': {
           target: env.VITE_API_URL,

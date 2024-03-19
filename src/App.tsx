@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Coin, Quotes } from "./type";
-import { fetchHistoricalData, formattedDate } from "./utils";
+import { TOP_COINS, fetchHistoricalData, fetchTopCoins, formattedDate } from "./utils";
 
 type FormProps = {
   coin: string;
   day: number;
-  percent: number;
+  yValue: number;
+  yValueCondition: number;
   startDate: string;
   endDate: string;
 }
@@ -18,9 +19,15 @@ function App() {
   useEffect(() => {
     // 상위 200위의 코인 불러오기
     const fetchTopCoinsData = async () => {
-      // const coins = await fetchTopCoins();
-      // console.log(coins);
-      // setTopCoins(coins);
+      let coins: any = localStorage.getItem(TOP_COINS);
+      if (!coins) {
+        coins = await fetchTopCoins();
+      } else {
+        coins = JSON.parse(coins);
+      }
+
+      console.log(coins);
+      setTopCoins(coins);
     };
 
     fetchTopCoinsData();
@@ -28,14 +35,13 @@ function App() {
 
   const {
     register,
-    handleSubmit,
-    watch,
-    formState: { errors },
+    handleSubmit
   } = useForm<FormProps>()
   const onSubmit: SubmitHandler<FormProps> = async (data) => {
     const COUNT = 365;
     const selectedCoinId = data.coin;
-    const yValue = Number(data.percent) * 0.01;
+    const yValue = Number(data.yValue) * 0.01;
+    const condition = Number(data.yValueCondition); // 1 이상, 2 이하
     const xDaysAgo = Number(data.day);
 
     let startDate = new Date(data.startDate);
@@ -45,15 +51,15 @@ function App() {
     let caseCount = 0;
     let futureProfitsArray: number[][] = Array.from({ length: 14 }, () => []); // 평균 수익률
     let winRates: number[][] = Array.from({ length: 14 }, () => []); // 승률
-    
-    // const selectedCoin = topCoins.find(coin => {
-    //   return coin.id == selectedCoinId;
-    // });
 
-    // if (!selectedCoin) {
-    //   console.log(`⚠️ ${selectedCoinId} : Coint Not Found.`);
-    //   return;
-    // }
+    const selectedCoin = topCoins.find(coin => {
+      return coin.id == selectedCoinId;
+    });
+
+    if (!selectedCoin) {
+      console.log(`⚠️ ${selectedCoinId} : Coint Not Found.`);
+      return;
+    }
 
     // 구간이 전체 기간인지, 특정 날짜 기간인지 확인
     if (data.startDate === "전체기간") {
@@ -90,7 +96,7 @@ function App() {
 
       const profit = (todayClose / xDaysAgoClose) - 1; // 과거 수익률
 
-      if (profit > yValue) {
+      if ((condition === 1 && profit >= yValue) || (condition === 2 && profit <= yValue)) {
         caseCount++;
 
         // 1일 - 14일 이후의 과거 수익률 계산
@@ -131,9 +137,14 @@ function App() {
         </select>
 
         <input {...register("day")} defaultValue={7} />
-        <input {...register("percent")} defaultValue={40} />
-        <input {...register("startDate")} placeholder="startDate" defaultValue={'2021-03-14'}/>
-        <input {...register("endDate")} placeholder="endDate" defaultValue={'2024-03-11'}/>
+
+        <select {...register("yValueCondition")}>
+          <option value={1}>이상</option>
+          <option value={2}>이하</option>
+        </select>
+        <input {...register("yValue")} defaultValue={40} />
+        <input {...register("startDate")} placeholder="startDate" defaultValue={'2021-03-14'} />
+        <input {...register("endDate")} placeholder="endDate" defaultValue={'2024-03-11'} />
 
         <button type="submit">계산하기</button>
       </form>

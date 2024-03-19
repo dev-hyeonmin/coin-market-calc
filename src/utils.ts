@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Coin, Historical } from "./type";
 
+export const TOP_COINS:string = 'TOP_COINS';
 export const apiKey = import.meta.env.VITE_API_KEY;
 export const baseURL = import.meta.env.VITE_API_URL;
 
@@ -11,7 +12,7 @@ export async function fetchTopCoins(limit = 200): Promise<Coin[]> {
     const response = await axios.get(`/api/v1/cryptocurrency/listings/latest`, {
       params: { limit },
       headers: { 'X-CMC_PRO_API_KEY': apiKey },
-    });
+    });    
 
     return response.data.data;
   } catch (error) {
@@ -42,6 +43,6 @@ export async function fetchHistoricalData(
 }
 
 
-export function formattedDate (date: Date) {
+export function formattedDate(date: Date) {
   return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + date.getDate();
 }

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import { fetchHistoricalData, fetchTopCoins } from "./api";
 import { CalculateResult } from "./components/CalculateResult";
+import { CalculatorForm } from "./components/CalculatorForm";
 import { Box } from "./components/layout/box/Box";
 import { Cell } from "./components/layout/layout/Cell";
-import { Text } from "./components/typography/Text";
 import { Coin, Quotes } from "./type";
 import { TOP_COINS, formattedDate } from "./utils";
 
@@ -22,7 +22,8 @@ function App() {
   const [totalCount, setTotalCount] = useState(0);
   const [totalProfits, setTotalProfits] = useState<string[]>(Array.from({ length: 14 }, () => '-'));
   const [totalWinRates, setTotalWinRates] = useState<string[]>(Array.from({ length: 14 }, () => '-'));
-
+  const [calcState, setCalcState] = useState(false);
+  const [calcYear, setCalcYear] = useState('');
 
   useEffect(() => {
     fetchTopCoinsData();
@@ -41,11 +42,10 @@ function App() {
     setTopCoins(coins);
   };
 
-  const {
-    register,
-    handleSubmit
-  } = useForm<FormProps>()
+  const methods = useForm<FormProps>();
   const onSubmit: SubmitHandler<FormProps> = async (data) => {
+    setCalcState(true);
+
     const COUNT = 365;
     const selectedCoinId = data.coin;
     const yValue = Number(data.yValue) * 0.01;
@@ -65,14 +65,14 @@ function App() {
     });
 
     if (!selectedCoin) {
-      console.log(`⚠️ ${selectedCoinId} : Coin Not Found.`);
+      alert(`⚠️ ${selectedCoinId} : Coin Not Found.`);
+      setCalcState(false);
       return;
     }
 
     // 구간이 전체 기간인지, 특정 날짜 기간인지 확인
     if (data.startDate === "전체기간") {
       startDate = new Date(selectedCoin.date_added);
-      startDate = new Date('2020-04-10');
     }
 
     let date = startDate;
@@ -83,6 +83,7 @@ function App() {
       const quotes = historicalList?.quotes;
 
       console.log(`Fetch Coin / ${selectedCoinId} : ${dateFormat}`);
+      setCalcYear(dateFormat.substring(0, 4));
 
       if (quotes) {
         allQuotes = [...allQuotes, ...quotes];
@@ -135,6 +136,7 @@ function App() {
 
     setTotalProfits(profitResult);
     setTotalWinRates(winRateResult);
+    setCalcState(false);
   }
 
   return (
@@ -142,57 +144,16 @@ function App() {
       <Box width="fit-content" align="center" verticalAlign="middle" direction="vertical" className="calc-box">
         <Box gap="80px">
           <Cell span={4}>
-            <h1>Coin Market Cap<br />Calculator</h1>
+            <h1>CoinMarketCap<br />Calculator</h1>
 
-            <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-              <dl>
-                <dd>
-                  <select {...register("coin", {required: 'Ticker is required.'})}>
-                    <option value={0}>티커를 선택해주세요.</option>
-                    {topCoins.map(coin =>
-                      <option key={`coin${coin.id}`} value={coin.id}>
-                        {coin.name}
-                      </option>
-                    )}
-                  </select>
-                </dd>
-
-                <dt>
-                  과거 수익률 (일)
-                </dt>
-                <dd>
-                  <input {...register("day", {required: 'This is required.'})} defaultValue={7} />
-                </dd>
-
-                <dt>
-                  필터링 기준 (%)
-                </dt>
-                <dd>
-                  <Box gap="5px">
-                    <input {...register("yValue", {required: 'This is required.'})} defaultValue={40} />
-                    <select {...register("yValueCondition")}>
-                      <option value={1}>이상</option>
-                      <option value={2}>이하</option>
-                    </select>
-                  </Box>
-                </dd>
-
-                <dt>
-                  구간
-                  <div className="notice">
-                    <Text size="tiny" skin="error">전체기간 탐색을 원할 시 첫번째칸에 '전체기간'으로 입력해주세요.</Text>
-                  </div>
-                </dt>
-                <dd>
-                  <Box gap="5px">
-                    <input {...register("startDate", {required: 'Start date is required.'})} placeholder="시작일(과거)" />
-                    <input {...register("endDate")} placeholder="종료일(최근)" defaultValue={formattedDate(new Date())} />
-                  </Box>
-                </dd>
-              </dl>
-
-              <button type="submit">계산하기</button>
-            </form>
+            <FormProvider {...methods}>
+              <form onSubmit={methods.handleSubmit(onSubmit)} autoComplete="off">
+                <CalculatorForm topCoins={topCoins} />
+                <button type="submit" disabled={calcState}>
+                  {calcState ? `${calcYear ? `${calcYear}년을 ` : ''}열심히 계산중이에요 🙆‍♀️` : '계산하기'}
+                </button>
+              </form>
+            </FormProvider>
           </Cell>
 
           <Cell span={3}>

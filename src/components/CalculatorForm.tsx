@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { Coin } from "../type";
-import { Cell } from "./layout/layout/Cell";
-import { Layout } from "./layout/layout/Layout";
+import { formattedDate } from "../utils";
+import { Box } from "./layout/box/Box";
+import { Text } from "./typography/Text";
 
 export interface CalculatorFormProps {
   topCoins: Coin[];
@@ -10,52 +12,62 @@ export interface CalculatorFormProps {
 export const CalculatorForm = ({
   topCoins
 }: CalculatorFormProps) => {
-  const { register } = useFormContext();
+  const { register, watch, getValues, setValue } = useFormContext();
+  
+  useEffect(() => {
+    const selectedTickerId = getValues('coin');
+    const selectedTicker = topCoins.find(coin => coin.id == selectedTickerId);
+
+    if (selectedTicker) {
+      setValue('startDate', selectedTicker?.date_added.substring(0, 10));
+    }
+  }, [watch('coin')])
 
   return (
-    <>
-      <Layout>
-        <Cell span={6}>
-          티커
-        </Cell>
-        <Cell span={6}>
-          <select {...register("coin")} defaultValue={5426}>
-            {topCoins.map(coin =>
-              <option key={`coin${coin.id}`} value={coin.id}>
-                {coin.name}
-              </option>
-            )}
-          </select>
-        </Cell>
+    <dl>
+      <dd>
+        <select {...register("coin", { required: 'Ticker is required.' })}>
+          <option value={0}>티커를 선택해주세요.</option>
+          {topCoins.map(coin =>
+            <option key={`coin${coin.id}`} value={coin.id}>
+              {coin.name}
+            </option>
+          )}
+        </select>
+      </dd>
 
-        <Cell span={6}>
-          과거 수익률 (일)
-        </Cell>
-        <Cell span={6}>
-          <input {...register("day")} defaultValue={7} />
-        </Cell>
+      <dt>
+        과거 수익률 (일)
+      </dt>
+      <dd>
+        <input {...register("day", { required: 'This is required.' })} defaultValue={7} />
+      </dd>
 
-        <Cell span={6}>
-          필터링 기준
-        </Cell>
-        <Cell span={6}>
-          <input {...register("yValue")} defaultValue={40} />
+      <dt>
+        필터링 기준 (%)
+      </dt>
+      <dd>
+        <Box gap="5px">
+          <input {...register("yValue", { required: 'This is required.' })} defaultValue={40} />
           <select {...register("yValueCondition")}>
             <option value={1}>이상</option>
             <option value={2}>이하</option>
           </select>
-        </Cell>
+        </Box>
+      </dd>
 
-        <Cell span={6}>
-          구간
-        </Cell>
-        <Cell span={6}>
-          <input {...register("startDate")} placeholder="startDate" defaultValue={'2021-03-14'} />
-          <input {...register("endDate")} placeholder="endDate" defaultValue={'2024-03-11'} />
-        </Cell>
-      </Layout>
-
-      <button type="submit">계산하기</button>
-    </>
+      <dt>
+        구간
+        <div className="notice">
+          <Text size="tiny" skin="primary">티커 선택시 자동으로 전체 범위가 선택됩니다.</Text>
+        </div>
+      </dt>
+      <dd>
+        <Box gap="5px">
+          <input {...register("startDate", { required: 'Start date is required.' })} placeholder="시작일(과거)" />
+          <input {...register("endDate")} placeholder="종료일(최근)" defaultValue={formattedDate(new Date())} />
+        </Box>
+      </dd>
+    </dl>
   )
 }

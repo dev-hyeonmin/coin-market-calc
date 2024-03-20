@@ -32,22 +32,22 @@ export const CalculateResult = ({
             <Text size="small" weight="bold" align="right">{index + 1}일</Text>
           </Cell>
           <Cell span={5}>
-            <Text align="center">{profit}</Text>
+            <Text align="center" size="small">{profit}</Text>
           </Cell>
 
           <Cell span={5}>
-            <Text align="center">{totalWinRates[index]}</Text>
+            <Text align="center" size="small">{totalWinRates[index]}</Text>
           </Cell>
         </React.Fragment>
       )}
 
       <Cell span={2}></Cell>
       <Cell span={5}>
-        <Text size="small" weight="bold" align="center">총 사례</Text>
+        <Text size="small" weight="bold" skin="primary" align="center">총 사례</Text>
       </Cell>
 
       <Cell span={5}>
-        <Text size="small" weight="bold" align="center">{totalCount} 회</Text>
+        <Text size="small" weight="bold" skin="primary" align="center">{totalCount} 회</Text>
       </Cell>
     </Layout>
   )

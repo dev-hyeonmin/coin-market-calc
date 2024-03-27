@@ -19,28 +19,24 @@ export const CalculatorForm = ({
   const [loading, setLoading] = useState(false);
 
   // 상위 200위의 코인 불러오기
-  const fetchTopCoinsData = async () => {
+  const fetchTopCoinsData = async (reload = false) => {
     setLoading(true);
 
     let coins: any = localStorage.getItem(TOP_COINS);
-    // if (!coins) {
+    if (!coins || (coins && reload)) {
       coins = await fetchTopCoins();
       localStorage.setItem(TOP_COINS, JSON.stringify(coins));
-    // } else {
-    //   coins = JSON.parse(coins);
-    // }
+
+      const today = formattedDate(new Date(), true);
+      localStorage.setItem(TOP_COINS_RELOADDATE, today);
+      setTopCoinsDate(today);
+    } else {
+      coins = JSON.parse(coins);
+    }
 
     setTopCoins(() => coins);
     setLoading(false);
   };
-
-  const reloadTopCoinData = () => {
-    const today = formattedDate(new Date(), true);
-    localStorage.setItem(TOP_COINS_RELOADDATE, today);
-    setTopCoinsDate(today);
-
-    fetchTopCoinsData();
-  }
 
   useEffect(() => {
     let reloadDate: any = localStorage.getItem(TOP_COINS_RELOADDATE);
@@ -72,7 +68,7 @@ export const CalculatorForm = ({
             </select>
           </Cell>
           <Cell span={3}>
-            <button type='button' className="btn-reload" disabled={loading} onClick={() => reloadTopCoinData()}>
+            <button type='button' className="btn-reload" disabled={loading} onClick={() => fetchTopCoinsData(true)}>
               {loading ? `갱신중` : '갱신'}
             </button>
           </Cell>

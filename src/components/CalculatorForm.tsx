@@ -14,7 +14,7 @@ export const CalculatorForm = ({
 
 }: CalculatorFormProps) => {
   const { register, watch, getValues, setValue } = useFormContext();
-  const [topCoinsDate, setTopCoinsDate] = useState<string>();
+  const [topCoinsDate, setTopCoinsDate] = useState<string>('-');
   const [topCoins, setTopCoins] = useState<Coin[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -24,8 +24,8 @@ export const CalculatorForm = ({
 
     let coins: any = localStorage.getItem(TOP_COINS);
     // if (!coins) {
-      coins = await fetchTopCoins();
-      localStorage.setItem(TOP_COINS, JSON.stringify(coins));
+    coins = await fetchTopCoins();
+    localStorage.setItem(TOP_COINS, JSON.stringify(coins));
     // } else {
     //   coins = JSON.parse(coins);
     // }
@@ -45,8 +45,9 @@ export const CalculatorForm = ({
   useEffect(() => {
     let reloadDate: any = localStorage.getItem(TOP_COINS_RELOADDATE);
 
-    setTopCoinsDate(reloadDate);
-    fetchTopCoinsData();
+    if (reloadDate) {
+      setTopCoinsDate(reloadDate);
+    }
   }, []);
 
   useEffect(() => {

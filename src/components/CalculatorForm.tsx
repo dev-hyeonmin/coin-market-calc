@@ -24,8 +24,8 @@ export const CalculatorForm = ({
 
     let coins: any = localStorage.getItem(TOP_COINS);
     // if (!coins) {
-    coins = await fetchTopCoins();
-    localStorage.setItem(TOP_COINS, JSON.stringify(coins));
+      coins = await fetchTopCoins();
+      localStorage.setItem(TOP_COINS, JSON.stringify(coins));
     // } else {
     //   coins = JSON.parse(coins);
     // }
@@ -44,10 +44,8 @@ export const CalculatorForm = ({
 
   useEffect(() => {
     let reloadDate: any = localStorage.getItem(TOP_COINS_RELOADDATE);
-
-    if (reloadDate) {
-      setTopCoinsDate(reloadDate);
-    }
+    setTopCoinsDate(reloadDate);
+    fetchTopCoinsData();
   }, []);
 
   useEffect(() => {

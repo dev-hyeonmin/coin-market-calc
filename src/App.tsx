@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import { fetchHistoricalData, fetchTopCoins } from "./api";
+import { fetchHistoricalData } from "./api";
 import { CalculateResult } from "./components/CalculateResult";
 import { CalculatorForm } from "./components/CalculatorForm";
 import { Box } from "./components/layout/box/Box";
 import { Cell } from "./components/layout/layout/Cell";
-import { Coin, Quotes } from "./type";
-import { TOP_COINS, formattedDate } from "./utils";
+import { Quotes } from "./type";
+import { formattedDate } from "./utils";
 
 export type FormProps = {
   coin: string;
@@ -18,29 +18,11 @@ export type FormProps = {
 }
 
 function App() {
-  const [topCoins, setTopCoins] = useState<Coin[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalProfits, setTotalProfits] = useState<string[]>(Array.from({ length: 14 }, () => '-'));
   const [totalWinRates, setTotalWinRates] = useState<string[]>(Array.from({ length: 14 }, () => '-'));
   const [calcState, setCalcState] = useState(false);
   const [calcYear, setCalcYear] = useState('');
-
-  useEffect(() => {
-    fetchTopCoinsData();
-  }, []);
-
-  // 상위 200위의 코인 불러오기
-  const fetchTopCoinsData = async () => {
-    let coins: any = localStorage.getItem(TOP_COINS);
-    if (!coins) {
-      coins = await fetchTopCoins();
-      localStorage.setItem(TOP_COINS, JSON.stringify(coins));
-    } else {
-      coins = JSON.parse(coins);
-    }
-
-    setTopCoins(coins);
-  };
 
   const methods = useForm<FormProps>();
   const onSubmit: SubmitHandler<FormProps> = async (data) => {
@@ -60,20 +42,20 @@ function App() {
     let futureProfitsArray: number[][] = Array.from({ length: 14 }, () => []); // 평균 수익률
     let winRates: number[][] = Array.from({ length: 14 }, () => []); // 승률
 
-    const selectedCoin = topCoins.find(coin => {
-      return coin.id == selectedCoinId;
-    });
+    // const selectedCoin = topCoins.find(coin => {
+    //   return coin.id == selectedCoinId;
+    // });
 
-    if (!selectedCoin) {
-      alert(`⚠️ ${selectedCoinId} : Coin Not Found.`);
-      setCalcState(false);
-      return;
-    }
+    // if (!selectedCoin) {
+    //   alert(`⚠️ ${selectedCoinId} : Coin Not Found.`);
+    //   setCalcState(false);
+    //   return;
+    // }
 
     // 구간이 전체 기간인지, 특정 날짜 기간인지 확인
-    if (data.startDate === "전체기간") {
-      startDate = new Date(selectedCoin.date_added);
-    }
+    // if (data.startDate === "전체기간") {
+    //   startDate = new Date(selectedCoin.date_added);
+    // }
 
     let date = startDate;
     do {
@@ -148,7 +130,7 @@ function App() {
 
             <FormProvider {...methods}>
               <form onSubmit={methods.handleSubmit(onSubmit)} autoComplete="off">
-                <CalculatorForm topCoins={topCoins} />
+                <CalculatorForm />
                 <button type="submit" disabled={calcState}>
                   {calcState ? `${calcYear ? `${calcYear}년을 ` : ''}열심히 계산중이에요 🙆‍♀️` : '계산하기'}
                 </button>

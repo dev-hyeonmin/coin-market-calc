@@ -1,19 +1,54 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
+import { fetchTopCoins } from "../api";
 import { Coin } from "../type";
-import { formattedDate } from "../utils";
+import { TOP_COINS, TOP_COINS_RELOADDATE, formattedDate } from "../utils";
 import { Box } from "./layout/box/Box";
+import { Cell } from "./layout/layout/Cell";
+import { Layout } from "./layout/layout/Layout";
 import { Text } from "./typography/Text";
 
-export interface CalculatorFormProps {
-  topCoins: Coin[];
-}
+export interface CalculatorFormProps { }
 
 export const CalculatorForm = ({
-  topCoins
+
 }: CalculatorFormProps) => {
   const { register, watch, getValues, setValue } = useFormContext();
-  
+  const [topCoinsDate, setTopCoinsDate] = useState<string>();
+  const [topCoins, setTopCoins] = useState<Coin[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 상위 200위의 코인 불러오기
+  const fetchTopCoinsData = async () => {
+    setLoading(true);
+
+    let coins: any = localStorage.getItem(TOP_COINS);
+    // if (!coins) {
+      coins = await fetchTopCoins();
+      localStorage.setItem(TOP_COINS, JSON.stringify(coins));
+    // } else {
+    //   coins = JSON.parse(coins);
+    // }
+
+    setTopCoins(() => coins);
+    setLoading(false);
+  };
+
+  const reloadTopCoinData = () => {
+    const today = formattedDate(new Date(), true);
+    localStorage.setItem(TOP_COINS_RELOADDATE, today);
+    setTopCoinsDate(today);
+
+    fetchTopCoinsData();
+  }
+
+  useEffect(() => {
+    let reloadDate: any = localStorage.getItem(TOP_COINS_RELOADDATE);
+
+    setTopCoinsDate(reloadDate);
+    fetchTopCoinsData();
+  }, []);
+
   useEffect(() => {
     const selectedTickerId = getValues('coin');
     const selectedTicker = topCoins.find(coin => coin.id == selectedTickerId);
@@ -26,14 +61,26 @@ export const CalculatorForm = ({
   return (
     <dl>
       <dd>
-        <select {...register("coin", { required: 'Ticker is required.' })}>
-          <option value={0}>티커를 선택해주세요.</option>
-          {topCoins.map(coin =>
-            <option key={`coin${coin.id}`} value={coin.id}>
-              {coin.name}
-            </option>
-          )}
-        </select>
+        <Layout gap="3px">
+          <Cell span={9}>
+            <select {...register("coin", { required: 'Ticker is required.' })}>
+              <option value={0}>티커를 선택해주세요.</option>
+              {topCoins.map(coin =>
+                <option key={`coin${coin.id}`} value={coin.id}>
+                  {coin.name}
+                </option>
+              )}
+            </select>
+          </Cell>
+          <Cell span={3}>
+            <button type='button' className="btn-reload" disabled={loading} onClick={() => reloadTopCoinData()}>
+              {loading ? `갱신중` : '갱신'}
+            </button>
+          </Cell>
+          <Cell>
+            <Text size="tiny">갱신일: {topCoinsDate}</Text>
+          </Cell>
+        </Layout>
       </dd>
 
       <dt>
